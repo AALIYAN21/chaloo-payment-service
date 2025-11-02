@@ -30,7 +30,7 @@ export const getPaymentToken = async (merchant_id, secured_key, trans_amount, cu
 
     try {
         // Switch easily between sandbox and live
-        const baseURL = "https://ipguat.apps.net.pk/Ecommerce/api/Transaction/GetAccessToken";
+        const baseURL = "https://ipg1.apps.net.pk/Ecommerce/api/Transaction/GetAccessToken";
 
         const response = await axios.post(baseURL, qs.stringify(data), {
             headers: {
