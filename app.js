@@ -84,10 +84,6 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public"))); // serve index.html
 connectDB();
 
-
-
-
-
 // SERVE SUCCESS PAGE
 app.get("/success", limiter, (req, res) => {
     res.sendFile(path.join(__dirname, "public", "success.html"));
