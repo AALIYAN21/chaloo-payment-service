@@ -1,0 +1,109 @@
+<!-- ============================================ -->
+<!-- 1. PAYMENT PROCESSING PAGE (index.html) -->
+<!-- ============================================ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PayFast Payment Processing</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+</head>
+<body class="bg-light p-4">
+  <div class="d-flex flex-column justify-content-center align-items-center vh-100">
+    <h2 class="text-center mb-4">Processing Payment</h2>
+    <div class="spinner-border mb-4" role="status" style="width: 3rem; height: 3rem; color: #f27421;">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <script>
+    (async () => {
+      const getQueryParam = param => new URLSearchParams(window.location.search).get(param);
+      const trans_amount = getQueryParam("amount");
+      const userId = getQueryParam("uid");
+      const authToken = getQueryParam("auth"); // ✅ Get from URL query param
+
+      console.log("💰 Amount:", trans_amount);
+      console.log("👤 User ID:", userId);
+      console.log("🔑 Auth Token:", authToken ? "Present" : "Missing");
+
+      if (!authToken) {
+        alert("❌ Authorization token missing!");
+        return;
+      }
+
+      // ✅ Store token for later use
+      sessionStorage.setItem("auth_token", authToken);
+      sessionStorage.setItem("user_id", userId);
+
+      try {
+        console.log("📤 Requesting payment token from backend...");
+        const tokenRes = await fetch("/api/payment/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ trans_amount, userId }),
+        });
+
+        if (!tokenRes.ok) {
+          throw new Error(`Backend returned ${tokenRes.status}`);
+        }
+
+        const tokenData = await tokenRes.json();
+        console.log("🧾 Token Response:", tokenData);
+
+        const accessToken = tokenData?.data?.ACCESS_TOKEN;
+        const basket_id = tokenData?.basketId;
+
+        if (!accessToken || !basket_id) {
+          console.error("❌ Missing token or basketId:", tokenData);
+          alert("Failed to get payment token. Please try again.");
+          return;
+        }
+
+        // ✅ Prepare PayFast payment form
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "https://ipg1.apps.net.pk/Ecommerce/api/Transaction/PostTransaction";
+
+        const fields = {
+          TOKEN: accessToken,
+          MERCHANT_ID: 236264,
+          MERCHANT_NAME: "Chaloo Technologies Pvt Ltd",
+          BASKET_ID: basket_id,
+          TXNAMT: trans_amount,
+          CURRENCY_CODE: "PKR",
+          SUCCESS_URL: "https://payment.chaloo.com.pk/success",
+          FAILURE_URL: "https://payment.chaloo.com.pk/failure",
+          CHECKOUT_URL: "https://payment.chaloo.com.pk/api/ipn",
+          CUSTOMER_EMAIL_ADDRESS: "someone234@gmail.com",
+          CUSTOMER_MOBILE_NO: "03000000090",
+          VERSION: "CTPL-v1",
+          ORDER_DATE: new Date().toISOString(),
+          TRAN_TYPE: "ECOMM_PURCHASE",
+          TXNDESC: "Bus Ticket Purchase",
+          PROCCODE: "00",
+        };
+
+        for (const key in fields) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = fields[key];
+          form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        console.log("✅ Redirecting to PayFast gateway...");
+
+        setTimeout(() => form.submit(), 1000);
+      } catch (error) {
+        console.error("❌ Payment error:", error);
+        alert("Payment initialization failed. Please try again.");
+      }
+    })();
+  </script>
+</body>
+</html>
