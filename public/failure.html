@@ -83,7 +83,7 @@
         // 🔐 Optional: send hash validation to backend for logging
         const token = localStorage.getItem('token');
         try {
-          await fetch('http://localhost:3000/api/hashvalidation', {
+          await fetch('/api/hashvalidation', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -96,7 +96,7 @@
         }
 
         // ✅ Instantly redirect to app deep link
-        const deepLink = `myapp://(protected)/payment-gateway/checkout?status=failure`;
+        const deepLink = `myapp://payment-gateway/checkout?status=failure`;
         console.log('🔗 Redirecting to deep link:', deepLink);
         window.location.href = deepLink;
 
